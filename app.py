@@ -6,11 +6,9 @@ from fastapi import FastAPI, Request
 from threading import Thread
 import uvicorn
 from dotenv import load_dotenv
-from starlette.responses import RedirectResponse
+import logging
 
-# Allow insecure transport for development
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
+logging.basicConfig(level=logging.INFO)
 # Load environment variables from .env file
 load_dotenv()
 
@@ -28,6 +26,7 @@ app = FastAPI()
 
 def save_access_token(token_data):
     """ Save token to file """
+    logging.info(f"Saving access token to file {TOKEN_FILE}")
     with open(TOKEN_FILE, "w") as f:
         json.dump(token_data, f)
 
@@ -45,49 +44,58 @@ async def callback(request: Request):
     response_state = request.query_params.get("state")
 
     if not auth_code:
-        return {"error": "Authorization failed or state mismatch"}
-
+        logging.warning("Authorization failed no auth code received")
+        return {"error": "Authorization failed no auth code received"}
+    logging.info("Fetching access token...")
     access_token = auth.fetch_token(str(request.url))
+    logging.info("Access token received")
     if access_token:
         save_access_token(access_token)
+        logging.info("Access token saved to file")
+        logging.info("Authorization successful! Kill this process and run the app again to like the tweet")
         return {"message": "Authorization successful! You can close this window."}
     return {"error": "Authorization failed"}
 
 def start_fastapi_server():
     """ Runs FastAPI server in a thread """
+    logging.info("\nStarting FastAPI server to capture callback...")
     thread = Thread(target=uvicorn.run, args=(app,), kwargs={"host": "127.0.0.1", "port": 8000})
     thread.start()
     thread.join()
 
 if __name__ == "__main__":
+    logging.info( "Starting Twitter OAuth2.0 PKCE flow")
+    logging.info( "Checking for existing access token")
     token_data = load_access_token()
 
     if not token_data:
-        print("No access token found. Generating authorization URL")
+        logging.info("No access token found. Generating authorization URL")
         auth_url = auth.get_authorization_url()
         webbrowser.open(auth_url)
-        print(f"Open this URL in your browser if it doesn't open automatically: {auth_url}")
-        print("\nStarting FastAPI server to capture callback...")
+        logging.info(f"Open this URL in your browser if it doesn't open automatically: {auth_url}")
         start_fastapi_server()
     else:
+        logging.info("Access token found. Fetching user details")
         client = tweepy.Client(bearer_token=token_data["access_token"], access_token=token_data['access_token'], consumer_key=CLIENT_ID, consumer_secret=CLIENT_SECRET)
+        # passing user_auth=False as using OAuth2.0 PKCE flow
         user = client.get_me(user_auth=False)
         user_id = user.data.id
-
+        logging.info(f"User ID: {user_id}")
         while True:
             tweet_id = input("\nEnter the Tweet ID to like (or 'exit' to quit): ").strip()
             if tweet_id.lower() == "exit":
                 break
             try:
+                # passing user_auth=False as using OAuth2.0 PKCE flow
                 response = client.like(tweet_id, user_auth=False)
             except tweepy.TooManyRequests as e:
-                print("Rate limit exceeded. Please try again later.")
+                logging.warning("Rate limit exceeded. Please try again later.")
                 continue
             except tweepy.Unauthorized as e:
-                print("Unauthorized access. Please check your credentials.")
+                logging.warning("Unauthorized access. Please check your credentials.")
                 continue
             except Exception as e:
-                print(f"An error occurred: {e}")
+                logging.error(f"An error occurred: {e}")
                 continue
 
-            print(response)
+            logging.info(f"Tweet liked successfully! Tweet ID: {tweet_id}")
