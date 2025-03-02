@@ -25,7 +25,8 @@ app = FastAPI()
 
 
 def save_access_token(token_data):
-    """ Save token to file """
+    # """ Save token to file """
+    # TODO: Save token to a secure location
     logging.info(f"Saving access token to file {TOKEN_FILE}")
     with open(TOKEN_FILE, "w") as f:
         json.dump(token_data, f)
@@ -52,8 +53,8 @@ async def callback(request: Request):
     if access_token:
         save_access_token(access_token)
         logging.info("Access token saved to file")
-        logging.info("Authorization successful! Kill this process and run the app again to like the tweet")
-        return {"message": "Authorization successful! You can close this window."}
+        logging.info("Authorization successful! run like.py to like the tweet")
+        return {"message": "Authorization successful! run like.py to like the tweet"}
     return {"error": "Authorization failed"}
 
 def start_fastapi_server():
@@ -75,27 +76,4 @@ if __name__ == "__main__":
         logging.info(f"Open this URL in your browser if it doesn't open automatically: {auth_url}")
         start_fastapi_server()
     else:
-        logging.info("Access token found. Fetching user details")
-        client = tweepy.Client(bearer_token=token_data["access_token"], access_token=token_data['access_token'], consumer_key=CLIENT_ID, consumer_secret=CLIENT_SECRET)
-        # passing user_auth=False as using OAuth2.0 PKCE flow
-        user = client.get_me(user_auth=False)
-        user_id = user.data.id
-        logging.info(f"User ID: {user_id}")
-        while True:
-            tweet_id = input("\nEnter the Tweet ID to like (or 'exit' to quit): ").strip()
-            if tweet_id.lower() == "exit":
-                break
-            try:
-                # passing user_auth=False as using OAuth2.0 PKCE flow
-                response = client.like(tweet_id, user_auth=False)
-            except tweepy.TooManyRequests as e:
-                logging.warning("Rate limit exceeded. Please try again later.")
-                continue
-            except tweepy.Unauthorized as e:
-                logging.warning("Unauthorized access. Please check your credentials.")
-                continue
-            except Exception as e:
-                logging.error(f"An error occurred: {e}")
-                continue
-
-            logging.info(f"Tweet liked successfully! Tweet ID: {tweet_id}")
+        logging.info("Access token found. Run like.py to like the tweet")

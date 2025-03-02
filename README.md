@@ -1,5 +1,10 @@
 # twitter-poc
-This project contains twitter AI POC.
+This twitter-poc application is split into two parts:
+
+1. `auth.py` - This script is used to authenticate the user and store the access token locally.
+2. `like.py` - This script is used to like the tweet by providing tweet id.
+
+Developer needs to run above scripts separately in order to authenticate the user and like the tweet.
 
 ### Prerequisites
 
@@ -40,12 +45,12 @@ This project contains twitter AI POC.
 
 ### Running the Application
 
-1. Start the FastAPI server:
+1. Authenticate the user:
     ```sh
-    python app.py
+    python auth.py
     ```
- 
-When this script runs first time it will ask for user authorization to access twitter account and store the access token locally.
-
-Run this script again to like the tweet by providing tweet id.
+2. Like the tweet by providing tweet id:
+    ```sh
+    python like.py
+   ```
 
