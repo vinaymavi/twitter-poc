@@ -14,9 +14,8 @@ Developer needs to run above scripts separately in order to authenticate the use
 
 ### Setup
 
-1. Download the repository:
+1. Download the zipfile and extract it in your local machine:
     ```sh
-    Downlaod zip file and extract it in your local machine
     cd twitter-poc
     ```
 
@@ -37,11 +36,14 @@ Developer needs to run above scripts separately in order to authenticate the use
     pip install -r requirements.txt
     ```
 
-5. Create a `.env` file in the root directory and add your Twitter API credentials use `example.env` as a template:
-    ```env
-    CLIENT_ID=your_client_id
-    CLIENT_SECRET=your_client_secret
-    ```
+   5. Create a `.env` file in the root directory and add your Twitter API credentials use `example.env` as a template:
+       ```env
+       CLIENT_ID=your_client_id
+       CLIENT_SECRET=your_client_secret
+       # This is a workaround for the fact that the OAuth2 server is using HTTP instead of HTTPS.
+       # This is not recommended for production use.
+       OAUTHLIB_INSECURE_TRANSPORT=1
+       ```
 
 ### Running the Application
 
